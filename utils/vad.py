@@ -1,10 +1,8 @@
 import torchaudio
 import torch
-import matplotlib
 import librosa
 import matplotlib.pyplot as plt
 from speechbrain.inference import VAD
-matplotlib.use("Agg")
 
 def extract_segments(wav_path, threshold, frame_shift, min_duration=0.3, max_duration=10.0):
     vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
@@ -66,7 +64,7 @@ def plot_segments(wav_path,segments):
     plt.title("VAD Detected Speech Segments")
     plt.legend(loc="upper right")
     plt.subplots_adjust(bottom=0.15,top=0.9)
-    plt.savefig("vad_result.png",dpi=100)
+    plt.savefig("pics/vad/vad_result.png",dpi=100)
     plt.close()
 if __name__ == "__main__":
     # parameters

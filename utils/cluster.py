@@ -38,5 +38,5 @@ def plot_cluster(embeddings_np,labels):
     plt.title("Speaker Embeddings Clustering Visualization")
     plt.xlabel("Dim 1")
     plt.ylabel("Dim 2")
-    plt.savefig("cluster_result.png",dpi=100)
+    plt.savefig("pics/cluster/cluster_result.png",dpi=100)
     plt.close()
