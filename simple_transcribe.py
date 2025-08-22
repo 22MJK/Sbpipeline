@@ -2,8 +2,10 @@ import torchaudio
 import whisper
 from speechbrain.inference import VAD
 from speechbrain.inference.speaker import EncoderClassifier
+from utils.vad import extract_segments
 import torch
 import numpy as np
+
 from sklearn.cluster import AgglomerativeClustering
 
 # 1. load audio
@@ -16,7 +18,7 @@ if signal.shape[0] > 1:
 
 # 2. VAD
 vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
-boundaries = vad.get_speech_segments(wav_path)
+boundaries = extract_segments(vad.get_speech_prob_file(wav_path), threshold=0.5, frame_shift=0.01)
 
 # 3. speaker embedding (ECAPA-TDNN)
 classifier = EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")
@@ -26,7 +28,7 @@ speaker_embeddings = []
 valid_segments = []
 
 for seg in boundaries:
-    start, end = seg[0].item(), seg[1].item()
+    start, end = seg[0], seg[1]
     if end - start < MIN_DURATION:
         continue
     segment = signal[:, int(start * fs):int(end * fs)]
