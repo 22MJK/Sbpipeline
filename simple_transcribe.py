@@ -40,7 +40,7 @@ embeddings_np = np.vstack([emb.cpu().numpy() for emb in speaker_embeddings])
 # 4. clustering
 
 labels = cluster_and_visualize(embeddings_np=embeddings_np)
-plot_cluster(embeddings_np,labels)
+plot_cluster(embeddings_np,labels,wav_path)
 
 # 5. initialize Whisper
 asr_model = whisper.load_model("large")

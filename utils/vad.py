@@ -1,6 +1,7 @@
 import torchaudio
 import torch
 import librosa
+import os
 import matplotlib.pyplot as plt
 from speechbrain.inference import VAD
 
@@ -54,6 +55,8 @@ def extract_segments(wav_path, threshold, frame_shift, min_duration=0.3, max_dur
 
     return final_segments
 def plot_segments(wav_path,segments):
+    basename = os.path.splitext(os.path.basename(wav_path))[0]
+    savedir = f"pics/vad/{basename}_vad_result.png"
     signal, fs = librosa.load(wav_path,sr=None)
     plt.figure(figsize=(12, 4))
     librosa.display.waveshow(signal,sr=fs)
@@ -64,7 +67,7 @@ def plot_segments(wav_path,segments):
     plt.title("VAD Detected Speech Segments")
     plt.legend(loc="upper right")
     plt.subplots_adjust(bottom=0.15,top=0.9)
-    plt.savefig("pics/vad/vad_result.png",dpi=100)
+    plt.savefig(savedir,dpi=100)
     plt.close()
 if __name__ == "__main__":
     # parameters
