@@ -1,21 +1,14 @@
 import torchaudio
+import torch
+import matplotlib
+import librosa
+import matplotlib.pyplot as plt
 from speechbrain.inference import VAD
+matplotlib.use("Agg")
 
-# parameters
-wav_path = "/opt/data/majikui/audios/smalltest.wav"
-threshold = 0.5
-min_duration = 0.3
-max_duration = 10.0
-frame_shift = 0.01  # 10ms
-
-# load model
-vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
-
-# directly call get_speech_prob_file to get probability (input is file path)
-probs = vad.get_speech_prob_file(wav_path)  
-
-# custom function, generate speech segments from probability
-def extract_segments(probs, threshold, frame_shift, min_duration=0.3, max_duration=10.0):
+def extract_segments(wav_path, threshold, frame_shift, min_duration=0.3, max_duration=10.0):
+    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
+    probs = vad.get_speech_prob_file(wav_path)
     probs = probs.squeeze()  # (T,)
     speech = probs > threshold
     segments = []
@@ -62,11 +55,29 @@ def extract_segments(probs, threshold, frame_shift, min_duration=0.3, max_durati
             final_segments.append(seg)
 
     return final_segments
-
+def plot_segments(wav_path,segments):
+    signal, fs = librosa.load(wav_path,sr=None)
+    plt.figure(figsize=(12, 4))
+    librosa.display.waveshow(signal,sr=fs)
+    for i,(start,end) in enumerate(segments):
+        plt.axvspan(start,end,color="red",alpha=0.3,label="Speech"if i == 0 else None)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.title("VAD Detected Speech Segments")
+    plt.legend(loc="upper right")
+    plt.subplots_adjust(bottom=0.15,top=0.9)
+    plt.savefig("vad_result.png",dpi=100)
+    plt.close()
 if __name__ == "__main__":
-    
-    segments = extract_segments(probs, threshold, frame_shift, min_duration, max_duration)
-
+    # parameters
+    wav_path = "/opt/data/majikui/audios/smalltest.wav"
+    threshold = 0.5 #500ms
+    min_duration = 0.3
+    max_duration = 10.0
+    frame_shift = 0.01  
+    signal, fs = librosa.load(wav_path,sr=None)
+    segments = extract_segments(wav_path, threshold, frame_shift, min_duration, max_duration)
+    plot_segments(wav_path,segments)
     print("Detected speech segments:")
     for start, end in segments:
         print(f"Start: {start:.2f}s, End: {end:.2f}s")
