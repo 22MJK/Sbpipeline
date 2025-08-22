@@ -3,6 +3,7 @@ import whisper
 from speechbrain.inference import VAD
 from speechbrain.inference.speaker import EncoderClassifier
 from utils.vad import extract_segments
+from utils.cluster import cluster_and_visualize,plot_cluster
 import torch
 import numpy as np
 
@@ -16,9 +17,9 @@ signal, fs = torchaudio.load(wav_path)
 if signal.shape[0] > 1:
     signal = signal[0:1, :]
 
-# 2. VAD
+# 2. VAD Detection
 vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
-boundaries = extract_segments(vad.get_speech_prob_file(wav_path), threshold=0.5, frame_shift=0.01)
+boundaries = extract_segments(wav_path, threshold=0.5, frame_shift=0.01)
 
 # 3. speaker embedding (ECAPA-TDNN)
 classifier = EncoderClassifier.from_hparams(source="speechbrain/spkrec-ecapa-voxceleb")
@@ -35,12 +36,11 @@ for seg in boundaries:
     embedding = classifier.encode_batch(segment).squeeze(0)
     speaker_embeddings.append(embedding)
     valid_segments.append((start, end))
-
-# 4. clustering
 embeddings_np = np.vstack([emb.cpu().numpy() for emb in speaker_embeddings])
-n_speakers = 2
-clustering = AgglomerativeClustering(n_clusters=n_speakers, metric='cosine', linkage='average')
-labels = clustering.fit_predict(embeddings_np)
+# 4. clustering
+
+labels = cluster_and_visualize(embeddings_np=embeddings_np)
+plot_cluster(embeddings_np,labels)
 
 # 5. initialize Whisper
 asr_model = whisper.load_model("large")
