@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import matplotlib.pyplot as plt
 from sklearn.metrics import pairwise_distances
 from sklearn.cluster import DBSCAN
@@ -27,14 +26,13 @@ def cluster_and_visualize(embeddings_np, eps=0.4, min_samples=2, method="dbscan"
     
     
     return labels
-def plot_cluster(embeddings_np,labels,path):
+def plot_cluster(embeddings_np,labels,basename):
     
     if embeddings_np.shape[1]>2:
         emb_2d = PCA(n_components = 2).fit_transform(embeddings_np)
     else:
         emb_2d = embeddings_np
     
-    basename = os.path.splitext(os.path.basename(path))[0]
     savedir = f"pics/cluster/{basename}_cluster_result.png"
     plt.figure(figsize=(8,6))
     scatter = plt.scatter(emb_2d[:,0], emb_2d[:,1], c=labels, cmap='tab10', s=50, alpha=0.8)

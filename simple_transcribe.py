@@ -1,16 +1,21 @@
 import torchaudio
 import whisper
+import json
+import os
 from speechbrain.inference import VAD
 from speechbrain.inference.speaker import EncoderClassifier
 from utils.vad import extract_segments
 from utils.cluster import cluster_and_visualize,plot_cluster
+from utils.resample import ffmpeg_resample_inplace
 import torch
 import numpy as np
 
 from sklearn.cluster import AgglomerativeClustering
 
 # 1. load audio
-wav_path = "/opt/data/majikui/audios/smalltest.wav"
+wav_path = "/opt/data/majikui/audios/bigtest.wav"
+basename = os.path.splitext(os.path.basename(wav_path))[0]
+ffmpeg_resample_inplace(wav_path,16000)
 signal, fs = torchaudio.load(wav_path)
 
 # if multi-channel, take the first channel
@@ -40,7 +45,7 @@ embeddings_np = np.vstack([emb.cpu().numpy() for emb in speaker_embeddings])
 # 4. clustering
 
 labels = cluster_and_visualize(embeddings_np=embeddings_np)
-plot_cluster(embeddings_np,labels,wav_path)
+plot_cluster(embeddings_np,labels,basename)
 
 # 5. initialize Whisper
 asr_model = whisper.load_model("large")
@@ -69,4 +74,7 @@ for i, ((start, end), label) in enumerate(zip(valid_segments, labels)):
 # 7. output structured text
 for r in results:
     print(f"[{r['start']:.2f}s - {r['end']:.2f}s] {r['speaker']}: {r['text']}")
+savedir = f"transcribe_results/{basename}_results.json"
+with open(savedir,"w",encoding="utf-8") as f:
+    json.dump(results,f,ensure_ascii=False,indent=4)
 
