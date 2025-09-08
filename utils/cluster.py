@@ -5,7 +5,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 
-def cluster_and_visualize(embeddings_np, eps=0.4, min_samples=2, method="dbscan", distance_metric="cosine"):
+def cluster(embeddings_np, eps=0.4, min_samples=2, method="dbscan", distance_metric="cosine"):
     n_samples = embeddings_np.shape[0]
     if n_samples == 0:
         raise ValueError("embeddings_np is empty!")
