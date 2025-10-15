@@ -1,12 +1,13 @@
 import torchaudio
 import torch
 import librosa
+import os
 import matplotlib.pyplot as plt
 from speechbrain.inference import VAD
 from resample import ffmpeg_resample_inplace
 
-def extract_segments(wav_path, threshold, frame_shift, min_duration=0.3, max_duration=10.0):
-    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
+def extract_segments(vad,wav_path, threshold, frame_shift, min_duration=0.3, max_duration=10.0):
+    
     probs = vad.get_speech_prob_file(wav_path)
     probs = probs.squeeze()  # (T,)
     speech = probs > threshold
@@ -55,30 +56,35 @@ def extract_segments(wav_path, threshold, frame_shift, min_duration=0.3, max_dur
 
     return final_segments
 def plot_segments(wav_path,segments,basename):
+    os.makedirs("pics/vad",exist_ok=True)
     savedir = f"pics/vad/{basename}_vad_result.png"
+    
     signal, fs = librosa.load(wav_path,sr=None)
     plt.figure(figsize=(12, 4))
-    librosa.display.waveshow(signal,sr=fs)
+    librosa.display.waveshow(signal,sr=fs,alpha=0.8)
+
     for i,(start,end) in enumerate(segments):
         plt.axvspan(start,end,color="red",alpha=0.3,label="Speech"if i == 0 else None)
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude")
     plt.title("VAD Detected Speech Segments")
-    plt.legend(loc="upper right")
-    plt.subplots_adjust(bottom=0.15,top=0.9)
+    if segments:
+        plt.legend(loc="upper right")
+    plt.tight_layout()
     plt.savefig(savedir,dpi=100)
     plt.close()
 if __name__ == "__main__":
     # parameters
-    wav_path = "/opt/data/majikui/audios/bigtest_vocals.wav"
+    wav_path = "/tmpdata01/majikui/audios/bigtest.wav"
     threshold = 0.5 #500ms
     min_duration = 0.3
     max_duration = 10.0
     frame_shift = 0.01  
     ffmpeg_resample_inplace(wav_path,16000)
     signal, fs = torchaudio.load(wav_path)
-    segments = extract_segments(wav_path, threshold, frame_shift, min_duration, max_duration)
-    plot_segments(wav_path,segments,"bigtest_vocals")
+    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
+    segments = extract_segments(vad,wav_path, threshold, frame_shift, min_duration, max_duration)
+    plot_segments(wav_path,segments,"bigtest")
     print("Detected speech segments:")
     for start, end in segments:
         print(f"Start: {start:.2f}s, End: {end:.2f}s")
