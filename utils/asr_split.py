@@ -39,17 +39,21 @@ def asr_extract_segments(vad,wav_path, threshold, frame_shift, min_duration=0.3,
             else:
                 merged.append(seg)
     final_segments = []
-    temp_start, temp_end = merged[0]
-    for seg in merged[1:]:
-        start, end = seg
-        if end - temp_start <= max_duration:
-            temp_end = end
-        else:
-            final_segments.append((temp_start, temp_end))
-            temp_start, temp_end = start, end
+    if merged:
+        temp_start, temp_end = merged[0]
+        for seg in merged[1:]:
+            start, end = seg
+            if end - temp_start <= max_duration:
+                temp_end = end
+            else:
+                final_segments.append((temp_start, temp_end))
+                temp_start, temp_end = start, end
+        final_segments.append((temp_start, temp_end))
+    
 
     return final_segments
-def plot_segments(wav_path,segments,basename):
+def plot_segments(wav_path,segments):
+    basename = os.path.splitext(os.path.basename(wav_path))[0]
     os.makedirs("/data/majikui/Sbpipeline/pics/split",exist_ok=True)
     savedir = f"/data/majikui/Sbpipeline/pics/split/{basename}_asr_segments.png"
 
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     ffmpeg_resample_inplace(wav_path,16000)
     vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="/data/majikui/Sbpipeline/tmp_vad")
     segments = asr_extract_segments(vad,wav_path, threshold, frame_shift, min_duration, max_duration)
-    plot_segments(wav_path,segments,"bigtest")
+    plot_segments(wav_path,segments)
     print("Detected speech segments:")
     for start, end in segments:
         print(f"Start: {start:.2f}s, End: {end:.2f}s")

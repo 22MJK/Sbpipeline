@@ -6,7 +6,7 @@ import librosa.display
 from speechbrain.pretrained import VAD
 from resample import ffmpeg_resample_inplace
 
-def plot_vad(vad, wav_path, frame_shift=0.01, basename=None):
+def plot_vad(vad, wav_path, frame_shift=0.01, threshold=0.5):
     """
     just plot vad probabilities and amplitude
     Args:
@@ -18,8 +18,7 @@ def plot_vad(vad, wav_path, frame_shift=0.01, basename=None):
         None (saves the plot to pics/vad directory)
     """
     os.makedirs("/data/majikui/Sbpipeline/pics/vad", exist_ok=True)
-    if basename is None:
-        basename = os.path.splitext(os.path.basename(wav_path))[0]
+    basename = os.path.splitext(os.path.basename(wav_path))[0]
     savedir = f"/data/majikui/Sbpipeline/pics/vad/{basename}_vadplot.png"
 
     # load audio
@@ -43,6 +42,7 @@ def plot_vad(vad, wav_path, frame_shift=0.01, basename=None):
 
     # VAD probabilities
     plt.plot(vad_times, probs, color="red", label="VAD Probability")
+    plt.axhline(y=threshold, color="green", linestyle="--", linewidth=1.5, label=f"Threshold = {threshold}")
     plt.ylim(-0.05, 1.05)
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude / Probability")
@@ -61,4 +61,4 @@ if __name__ == "__main__":
     ffmpeg_resample_inplace(wav_path,16000)
 
     vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="/data/majikui/Sbpipeline/tmp_vad")
-    plot_vad(vad,wav_path,frame_shift=0.01,basename="bigtest")
+    plot_vad(vad,wav_path,frame_shift=0.01)

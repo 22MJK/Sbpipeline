@@ -55,7 +55,8 @@ def extract_segments(vad,wav_path, threshold, frame_shift, min_duration=0.3, max
             final_segments.append(seg)
 
     return final_segments
-def plot_segments(wav_path,segments,basename):
+def plot_segments(wav_path,segments):
+    basename = os.path.splitext(os.path.basename(wav_path))[0]
     os.makedirs("/data/majikui/Sbpipeline/pics/split",exist_ok=True)
     savedir = f"/data/majikui/Sbpipeline/pics/split/{basename}_segments.png"
 
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     ffmpeg_resample_inplace(wav_path,16000)
     vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="/data/majikui/Sbpipeline/tmp_vad")
     segments = extract_segments(vad,wav_path, threshold, frame_shift, min_duration, max_duration)
-    plot_segments(wav_path,segments,"bigtest")
+    plot_segments(wav_path,segments)
     print("Detected speech segments:")
     for start, end in segments:
         print(f"Start: {start:.2f}s, End: {end:.2f}s")
