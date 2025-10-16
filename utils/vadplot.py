@@ -8,32 +8,40 @@ from resample import ffmpeg_resample_inplace
 
 def plot_vad(vad, wav_path, frame_shift=0.01, basename=None):
     """
+    just plot vad probabilities and amplitude
+    Args:
+        vad: VAD object from speechbrain
+        wav_path: path to the audio file
+        frame_shift: frame shift in seconds (default: 0.01s)
+        basename: base name for saving the plot (if None, use wav file name)
+    Returns:
+        None (saves the plot to pics/vad directory)
     """
-    os.makedirs("pics/vad", exist_ok=True)
+    os.makedirs("/data/majikui/Sbpipeline/pics/vad", exist_ok=True)
     if basename is None:
         basename = os.path.splitext(os.path.basename(wav_path))[0]
-    savedir = f"/data/majikui/Sbpipeline/pics/vad/{basename}_vad_only.png"
+    savedir = f"/data/majikui/Sbpipeline/pics/vad/{basename}_vadplot.png"
 
-    # 读取音频
+    # load audio
     signal, fs = librosa.load(wav_path, sr=None)
     duration = len(signal) / fs
     times = np.linspace(0, duration, num=len(signal))
 
-    # 获取 VAD 概率
+    # get VAD probabilities
     probs = vad.get_speech_prob_file(wav_path).squeeze()
-    print(probs)
+    # print(probs)
     probs_np = probs.detach().cpu().float().numpy()
     vad_times = np.arange(len(probs_np)) * frame_shift
 
-    # 绘图
+    # plot
     plt.figure(figsize=(12, 4))
 
-    # 波形
+    # waveform
     plt.plot(times, signal, alpha=0.8, label="Waveform")
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude")
 
-    # VAD 概率
+    # VAD probabilities
     plt.plot(vad_times, probs, color="red", label="VAD Probability")
     plt.ylim(-0.05, 1.05)
     plt.xlabel("Time (s)")
@@ -52,5 +60,5 @@ if __name__ == "__main__":
     wav_path = "/tmpdata01/majikui/audios/bigtest.wav"
     ffmpeg_resample_inplace(wav_path,16000)
 
-    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
+    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="/data/majikui/Sbpipeline/tmp_vad")
     plot_vad(vad,wav_path,frame_shift=0.01,basename="bigtest")

@@ -56,9 +56,9 @@ def extract_segments(vad,wav_path, threshold, frame_shift, min_duration=0.3, max
 
     return final_segments
 def plot_segments(wav_path,segments,basename):
-    os.makedirs("pics/vad",exist_ok=True)
-    savedir = f"pics/vad/{basename}_vad_result.png"
-    
+    os.makedirs("/data/majikui/Sbpipeline/pics/split",exist_ok=True)
+    savedir = f"/data/majikui/Sbpipeline/pics/split/{basename}_segments.png"
+
     signal, fs = librosa.load(wav_path,sr=None)
     plt.figure(figsize=(12, 4))
     librosa.display.waveshow(signal,sr=fs,alpha=0.8)
@@ -67,7 +67,7 @@ def plot_segments(wav_path,segments,basename):
         plt.axvspan(start,end,color="red",alpha=0.3,label="Speech"if i == 0 else None)
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitude")
-    plt.title("VAD Detected Speech Segments")
+    plt.title("Detected Speech Segments")
     if segments:
         plt.legend(loc="upper right")
     plt.tight_layout()
@@ -76,13 +76,12 @@ def plot_segments(wav_path,segments,basename):
 if __name__ == "__main__":
     # parameters
     wav_path = "/tmpdata01/majikui/audios/bigtest.wav"
-    threshold = 0.5 #500ms
+    threshold = 0.5 #probability threshold
     min_duration = 0.3
     max_duration = 10.0
     frame_shift = 0.01  
     ffmpeg_resample_inplace(wav_path,16000)
-    signal, fs = torchaudio.load(wav_path)
-    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="tmp_vad")
+    vad = VAD.from_hparams(source="speechbrain/vad-crdnn-libriparty", savedir="/data/majikui/Sbpipeline/tmp_vad")
     segments = extract_segments(vad,wav_path, threshold, frame_shift, min_duration, max_duration)
     plot_segments(wav_path,segments,"bigtest")
     print("Detected speech segments:")
